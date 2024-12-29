@@ -1,5 +1,6 @@
 package com.booking.booking_system.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -27,6 +28,7 @@ public class RefreshToken {
     @Column(nullable = false)
     private Instant expirationTime;
 
+    @JsonIgnore // Prevent serialization of the circular reference
     @OneToOne
     private User user;
 }

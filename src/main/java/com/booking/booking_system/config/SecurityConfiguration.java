@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -11,7 +12,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-
+@EnableMethodSecurity
 public class SecurityConfiguration {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationProvider authenticationProvider;
@@ -26,8 +27,12 @@ public class SecurityConfiguration {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**")
-                        .permitAll()
+                        .requestMatchers("/api/v1/auth/**").permitAll() // Allow public access for auth endpoints
+                        .requestMatchers("/api/v1/services").permitAll() // Anyone can view services
+                        .requestMatchers("/api/v1/services/**").hasAuthority("ADMIN") // Restrict modifications to admin
+//                        // Restrict all /api/bookings endpoints to authenticate users
+                        .requestMatchers("/api/v1/bookings/**").authenticated()
+                        // Any other requests must be authenticated
                         .anyRequest()
                         .authenticated())
                 .sessionManagement(session -> session
