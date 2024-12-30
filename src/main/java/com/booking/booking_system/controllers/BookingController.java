@@ -97,10 +97,10 @@ public class BookingController {
 
     // Get User Bookings
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Booking>> getUserBookings(@PathVariable Long userId) {
+    public ResponseEntity<?> getUserBookings(@PathVariable Long userId) {
         List<Booking> bookings = bookingService.getUserBookings(userId);
         if (bookings.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(bookings);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No bookings found for user ID " + userId);
         }
         return ResponseEntity.ok(bookings);
     }
