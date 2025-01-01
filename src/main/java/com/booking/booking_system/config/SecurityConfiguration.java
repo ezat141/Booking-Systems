@@ -27,7 +27,12 @@ public class SecurityConfiguration {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        // Public access for authentication endpoints
                         .requestMatchers("/api/v1/auth/**").permitAll() // Allow public access for auth endpoints
+                        // Public access to view schedules by service ID and date
+                        .requestMatchers("/api/v1/schedules/{serviceId}/{date}").permitAll()
+                        // Restrict all other schedule operations to admins
+                        .requestMatchers("/api/v1/schedules/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/v1/services").permitAll() // Anyone can view services
                         .requestMatchers("/api/v1/services/**").hasAuthority("ADMIN") // Restrict modifications to admin
 //                        // Restrict all /api/bookings endpoints to authenticate users
