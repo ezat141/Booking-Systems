@@ -15,7 +15,7 @@ public class Booking {
 
 
     @ManyToOne
-    private Service service;
+    private Schedule schedule;
 
     private String timeSlot;
 

@@ -10,9 +10,13 @@ import com.booking.booking_system.repositories.BookingRepository;
 import com.booking.booking_system.repositories.ServiceRepository;
 import com.booking.booking_system.repositories.UserRepository;
 import com.booking.booking_system.services.BookingService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,69 +25,69 @@ import java.util.List;
 @RequestMapping("/api/v1/bookings")
 public class BookingController {
 
-    @Autowired
-    private BookingService bookingService;
-    @Autowired
+    private final BookingService bookingService;
 
-    private UserRepository userRepository;
-    @Autowired
+    public BookingController(BookingService bookingService) {
+        this.bookingService = bookingService;
+    }
 
-    private ServiceRepository serviceRepository;
-    @Autowired
-
-    private BookingRepository bookingRepository;
 
 
     // Get All Bookings
+//    @GetMapping
+//    public ResponseEntity<List<Booking>> getAllBookings() {
+//        List<Booking> bookings = bookingService.getAllBookings();
+//        return ResponseEntity.ok(bookings);
+//    }
+
     @GetMapping
-    public ResponseEntity<List<Booking>> getAllBookings() {
-        List<Booking> bookings = bookingService.getAllBookings();
+    public ResponseEntity<Page<Booking>> getAllBookings(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<Booking> bookings = bookingService.getAllBookings(PageRequest.of(page, size));
         return ResponseEntity.ok(bookings);
     }
 
-//    // Create a New Booking
-//    @PostMapping
-//    public ResponseEntity<Booking> createBooking(@RequestBody Booking booking) {
-//        Booking createdBooking = bookingService.createBooking(booking);
-//        return ResponseEntity.status(HttpStatus.CREATED).body(createdBooking);
-//    }
 
+    // Create a New Booking
     @PostMapping
-    public ResponseEntity<Booking> createBooking(@RequestBody BookingRequest bookingRequest) {
+    public ResponseEntity<?> createBooking(@Valid @RequestBody BookingRequest bookingRequest) {
         try {
-            // Retrieve User and Service entities by ID
-            User user = userRepository.findById(bookingRequest.getUserId())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-            Service service = serviceRepository.findById(bookingRequest.getServiceId())
-                    .orElseThrow(() -> new RuntimeException("Service not found"));
-
-            // Create a new Booking
-            Booking booking = new Booking();
-            booking.setUser(user);
-            booking.setService(service);
-            booking.setTimeSlot(bookingRequest.getTimeSlot());
-            booking.setStatus(bookingRequest.getStatus());
-
-            // Save the booking
-            Booking createdBooking = bookingRepository.save(booking);
+            // Delegate booking creation to the service
+            Booking createdBooking = bookingService.createBooking(bookingRequest);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdBooking);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-    }
-
-
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Booking> updateBooking(@PathVariable Long id, @RequestBody BookingRequest updatedBooking) {
-        try {
-            Booking updated = bookingService.updateBooking(id, updatedBooking);
-            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            // Handle unavailable time slot
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            // Handle other errors (e.g., User or Schedule not found)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
         }
     }
+
+    @PutMapping("/{bookingId}/confirm")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<?> confirmBooking(@PathVariable Long bookingId) {
+        try {
+            Booking confirmedBooking = bookingService.confirmBooking(bookingId);
+            return ResponseEntity.ok(confirmedBooking);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+
+
+
+//    @PutMapping("/{id}")
+//    public ResponseEntity<Booking> updateBooking(@PathVariable Long id, @RequestBody BookingRequest updatedBooking) {
+//        try {
+//            Booking updated = bookingService.updateBooking(id, updatedBooking);
+//            return ResponseEntity.ok(updated);
+//        } catch (RuntimeException e) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+//        }
+//    }
 
     @PutMapping("/{id}/cancel")
     public ResponseEntity<String> cancelBooking(@PathVariable Long id) {

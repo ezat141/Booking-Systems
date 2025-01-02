@@ -3,6 +3,7 @@ package com.booking.booking_system.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -37,6 +38,9 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/v1/services/**").hasAuthority("ADMIN") // Restrict modifications to admin
 //                        // Restrict all /api/bookings endpoints to authenticate users
                         .requestMatchers("/api/v1/bookings/**").authenticated()
+                        // Only ADMIN can confirm bookings
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/bookings/*/confirm").hasAuthority("ADMIN") // The pattern "/api/v1/bookings/*/confirm" matches paths like /api/v1/bookings/1/confirm, where 1 is the booking ID.
+
                         // Any other requests must be authenticated
                         .anyRequest()
                         .authenticated())

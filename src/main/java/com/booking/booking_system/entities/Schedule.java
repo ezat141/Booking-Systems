@@ -13,8 +13,9 @@ public class Schedule {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long serviceId;
+
+    @ManyToOne
+    private Service service; // The service this schedule belongs to
 
     @Column(nullable = false)
     private LocalDate date;
