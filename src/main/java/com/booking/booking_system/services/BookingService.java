@@ -47,14 +47,12 @@ public class BookingService implements BookingServiceInt{
         // Retrieve User and Schedule
         User user = userRepository.findById(bookingRequest.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        Schedule schedule = scheduleRepository.findById(bookingRequest.getScheduleId())
-                .orElseThrow(() -> new RuntimeException("Schedule not found"));
+        // Find the schedule for the given service and time slot
+        Schedule schedule = scheduleRepository.findByServiceIdAndTimeSlot(
+                        bookingRequest.getServiceId(), bookingRequest.getTimeSlot())
+                .orElseThrow(() -> new RuntimeException("No available schedule for the given time slot"));
 
-        // Retrieve the Service associated with the Schedule
-        com.booking.booking_system.entities.Service service = schedule.getService();
-        if(service == null) {
-            throw new RuntimeException("Service not found for the given schedule");
-        }
+
 
         // Validate time slot availability
         if (!schedule.getTimeSlots().contains(bookingRequest.getTimeSlot())) {

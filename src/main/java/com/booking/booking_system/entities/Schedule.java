@@ -15,9 +15,9 @@ public class Schedule {
     private Long id;
 
 
-    @NotNull(message = "Service is required")
     @ManyToOne
-    private Service service; // The service this schedule belongs to
+    @JoinColumn(name = "service_id", nullable = false)
+    private Service service;
 
     @NotNull(message = "Date is required")
     private LocalDate date;

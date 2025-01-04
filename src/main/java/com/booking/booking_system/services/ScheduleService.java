@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ScheduleService implements ScheduleServiceInt{
@@ -37,4 +39,14 @@ public class ScheduleService implements ScheduleServiceInt{
     public List<Schedule> getSchedulesByServiceAndDate(Long serviceId, LocalDate date) {
         return scheduleRepository.findByServiceIdAndDate(serviceId, date);
     }
+    public List<String> getAvailableTimeSlots(Long serviceId, LocalDate date) {
+        List<Schedule> schedules = scheduleRepository.findByServiceIdAndDate(serviceId, date);
+        return schedules.stream()
+                .flatMap(schedule -> schedule.getTimeSlots().stream())
+                .collect(Collectors.toList());
+    }
+    public Optional<Schedule> findByServiceIdAndTimeSlot(Long serviceId, String timeSlot) {
+        return scheduleRepository.findByServiceIdAndTimeSlot(serviceId, timeSlot);
+    }
+
 }

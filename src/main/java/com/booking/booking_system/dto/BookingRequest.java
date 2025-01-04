@@ -7,8 +7,8 @@ import lombok.Data;
 public class BookingRequest {
     @NotNull(message = "User ID is required")
     private Long userId;
-    @NotNull(message = "Schedule ID is required")
-    private Long scheduleId;
+    @NotNull(message = "Service ID is required")
+    private Long serviceId;
     @NotNull(message = "Time slot is required")
     private String timeSlot;
 
