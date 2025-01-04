@@ -1,17 +1,12 @@
 package com.booking.booking_system.controllers;
 
 
+import com.booking.booking_system.dto.BookingResponse;
+import com.booking.booking_system.dto.GeneralResponse;
 import com.booking.booking_system.entities.Booking;
-import com.booking.booking_system.entities.BookingStatus;
-import com.booking.booking_system.entities.Service;
-import com.booking.booking_system.entities.User;
-import com.booking.booking_system.model.BookingRequest;
-import com.booking.booking_system.repositories.BookingRepository;
-import com.booking.booking_system.repositories.ServiceRepository;
-import com.booking.booking_system.repositories.UserRepository;
+import com.booking.booking_system.dto.BookingRequest;
 import com.booking.booking_system.services.BookingService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -41,27 +36,29 @@ public class BookingController {
 //    }
 
     @GetMapping
-    public ResponseEntity<Page<Booking>> getAllBookings(
+    public ResponseEntity<Page<BookingResponse>> getAllBookings(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<Booking> bookings = bookingService.getAllBookings(PageRequest.of(page, size));
-        return ResponseEntity.ok(bookings);
+        return ResponseEntity.ok(bookingService.getAllBookings(PageRequest.of(page, size)));
     }
 
 
     // Create a New Booking
     @PostMapping
-    public ResponseEntity<?> createBooking(@Valid @RequestBody BookingRequest bookingRequest) {
+    public ResponseEntity<GeneralResponse<?>> createBooking(@Valid @RequestBody BookingRequest bookingRequest) {
         try {
             // Delegate booking creation to the service
-            Booking createdBooking = bookingService.createBooking(bookingRequest);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdBooking);
+            BookingResponse createdBooking = bookingService.createBooking(bookingRequest);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(GeneralResponse.success(createdBooking));
         } catch (IllegalArgumentException e) {
             // Handle unavailable time slot
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(GeneralResponse.error(e.getMessage()));
         } catch (RuntimeException e) {
             // Handle other errors (e.g., User or Schedule not found)
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(GeneralResponse.error("An error occurred: " + e.getMessage()));
         }
     }
 
@@ -69,7 +66,7 @@ public class BookingController {
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> confirmBooking(@PathVariable Long bookingId) {
         try {
-            Booking confirmedBooking = bookingService.confirmBooking(bookingId);
+            BookingResponse confirmedBooking = bookingService.confirmBooking(bookingId);
             return ResponseEntity.ok(confirmedBooking);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -101,10 +98,10 @@ public class BookingController {
 
     // Get User Bookings
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getUserBookings(@PathVariable Long userId) {
-        List<Booking> bookings = bookingService.getUserBookings(userId);
+    public ResponseEntity<List<BookingResponse>> getUserBookings(@PathVariable Long userId) {
+        List<BookingResponse> bookings = bookingService.getUserBookings(userId);
         if (bookings.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No bookings found for user ID " + userId);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
         return ResponseEntity.ok(bookings);
     }

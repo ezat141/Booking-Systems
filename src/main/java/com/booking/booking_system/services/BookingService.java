@@ -1,14 +1,13 @@
 package com.booking.booking_system.services;
 
+import com.booking.booking_system.dto.BookingResponse;
 import com.booking.booking_system.entities.Booking;
 import com.booking.booking_system.entities.BookingStatus;
 import com.booking.booking_system.entities.Schedule;
 import com.booking.booking_system.entities.User;
-import com.booking.booking_system.exceptions.TimeSlotUnavailableException;
-import com.booking.booking_system.model.BookingRequest;
+import com.booking.booking_system.dto.BookingRequest;
 import com.booking.booking_system.repositories.BookingRepository;
 import com.booking.booking_system.repositories.ScheduleRepository;
-import com.booking.booking_system.repositories.ServiceRepository;
 import com.booking.booking_system.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -17,9 +16,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
-public class BookingService {
+public class BookingService implements BookingServiceInt{
 
     @Autowired
     private BookingRepository bookingRepository;
@@ -36,19 +36,25 @@ public class BookingService {
 //    }
 
     // Get All Bookings pages
-    public Page<Booking> getAllBookings(Pageable pageable) {
-        return bookingRepository.findAll(pageable);
+    public Page<BookingResponse> getAllBookings(Pageable pageable) {
+        return bookingRepository.findAll(pageable).map(this::mapToBookingResponse);
     }
 
 
 
     // Create a New Booking
-    public Booking createBooking(BookingRequest bookingRequest) {
+    public BookingResponse createBooking(BookingRequest bookingRequest) {
         // Retrieve User and Schedule
         User user = userRepository.findById(bookingRequest.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         Schedule schedule = scheduleRepository.findById(bookingRequest.getScheduleId())
                 .orElseThrow(() -> new RuntimeException("Schedule not found"));
+
+        // Retrieve the Service associated with the Schedule
+        com.booking.booking_system.entities.Service service = schedule.getService();
+        if(service == null) {
+            throw new RuntimeException("Service not found for the given schedule");
+        }
 
         // Validate time slot availability
         if (!schedule.getTimeSlots().contains(bookingRequest.getTimeSlot())) {
@@ -65,8 +71,10 @@ public class BookingService {
         // Remove the booked time slot from the schedule
         schedule.getTimeSlots().remove(bookingRequest.getTimeSlot());
         scheduleRepository.save(schedule); // Save updated schedule
+        // Map the booking to a BookingResponse
+        bookingRepository.save(booking);
+        return mapToBookingResponse(booking);
 
-        return bookingRepository.save(booking);
     }
 
 
@@ -92,17 +100,20 @@ public class BookingService {
     }
 
     // Get User Bookings
-    public List<Booking> getUserBookings(Long userId) {
-        return bookingRepository.findByUserId(userId);
+    public List<BookingResponse> getUserBookings(Long userId) {
+        return bookingRepository.findByUserId(userId).stream()
+                .map(this::mapToBookingResponse)
+                .collect(Collectors.toList());
     }
 
-    public Booking confirmBooking(Long bookingId) {
+    public BookingResponse confirmBooking(Long bookingId) {
         Optional<Booking> bookingOptional = bookingRepository.findById(bookingId);
         if (bookingOptional.isPresent()) {
             Booking booking = bookingOptional.get();
             if (booking.getStatus() == BookingStatus.PENDING) {
                 booking.setStatus(BookingStatus.CONFIRMED);
-                return bookingRepository.save(booking);
+                bookingRepository.save(booking);
+                return mapToBookingResponse(booking);
             } else {
                 throw new RuntimeException("Booking is already confirmed or cancelled.");
             }
@@ -110,5 +121,17 @@ public class BookingService {
         else {
             throw new RuntimeException("Booking not found with ID: " + bookingId);
         }
+    }
+    private BookingResponse mapToBookingResponse(Booking booking) {
+        BookingResponse response = new BookingResponse();
+        response.setId(booking.getId());
+        response.setUserId(booking.getUser().getId());
+        response.setUserName(booking.getUser().getName());
+        response.setScheduleId(booking.getSchedule().getId());
+        response.setTimeSlot(booking.getTimeSlot());
+        response.setStatus(booking.getStatus());
+        response.setServiceId(booking.getSchedule().getService().getId());
+        response.setServiceName(booking.getSchedule().getService().getName());
+        return response;
     }
 }

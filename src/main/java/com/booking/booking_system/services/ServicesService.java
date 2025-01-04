@@ -2,20 +2,25 @@ package com.booking.booking_system.services;
 
 import com.booking.booking_system.repositories.ServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
-public class ServicesService {
+public class ServicesService implements ServicesServiceInt{
 
     @Autowired
     private ServiceRepository serviceRepository;
 
     // Fetch all services
-    public List<com.booking.booking_system.entities.Service>getAllServices() {
-        return serviceRepository.findAll();
+//    public List<com.booking.booking_system.entities.Service>getAllServices() {
+//        return serviceRepository.findAll();
+//    }
+    // Fetch all services pages
+    public Page<com.booking.booking_system.entities.Service> getAllServices(Pageable pageable) {
+        return serviceRepository.findAll(pageable);
     }
 
     // Add a new service

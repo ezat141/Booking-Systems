@@ -1,6 +1,5 @@
-package com.booking.booking_system.model;
+package com.booking.booking_system.dto;
 
-import com.booking.booking_system.entities.BookingStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 

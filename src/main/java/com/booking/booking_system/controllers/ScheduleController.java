@@ -1,7 +1,9 @@
 package com.booking.booking_system.controllers;
 
+import com.booking.booking_system.dto.TimeSlotRequest;
 import com.booking.booking_system.entities.Schedule;
 import com.booking.booking_system.services.ScheduleService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,7 +24,7 @@ public class ScheduleController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping
-    public ResponseEntity<Schedule> createSchedule(@RequestBody Schedule schedule) {
+    public ResponseEntity<Schedule> createSchedule(@Valid @RequestBody Schedule schedule) {
         Schedule createdSchedule = scheduleService.createSchedule(schedule);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdSchedule);
     }
@@ -37,12 +39,15 @@ public class ScheduleController {
     // Update Schedule Time Slots
     @PreAuthorize("hasAuthority('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<Schedule> updateSchedule(@PathVariable Long id, @RequestBody List<String> timeSlots) {
+    public ResponseEntity<?> updateSchedule(@PathVariable Long id, @RequestBody TimeSlotRequest timeSlotRequest) {
         try {
+            List<String> timeSlots = timeSlotRequest.getTimeSlots();
             Schedule updatedSchedule = scheduleService.updateSchedule(id, timeSlots);
             return ResponseEntity.ok(updatedSchedule);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Error: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid request format for timeSlots.");
         }
     }
 
