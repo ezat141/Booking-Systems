@@ -22,7 +22,6 @@ public class ScheduleController {
 
     private final ScheduleService scheduleService;
 
-
     public ScheduleController(ScheduleService scheduleService) {
         this.scheduleService = scheduleService;
 
