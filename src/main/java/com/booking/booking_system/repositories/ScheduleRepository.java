@@ -13,5 +13,8 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
     @Query("SELECT s FROM Schedule s WHERE s.service.id = :serviceId AND :timeSlot MEMBER OF s.timeSlots")
     Optional<Schedule> findByServiceIdAndTimeSlot(@Param("serviceId") Long serviceId, @Param("timeSlot") String timeSlot);
+
     List<Schedule> findByServiceIdAndDate(Long serviceId, LocalDate date);
+
+    List<Schedule> findByServiceId(Long serviceId);
 }

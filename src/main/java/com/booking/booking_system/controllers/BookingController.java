@@ -5,6 +5,7 @@ import com.booking.booking_system.dto.BookingResponse;
 import com.booking.booking_system.dto.GeneralResponse;
 import com.booking.booking_system.entities.Booking;
 import com.booking.booking_system.dto.BookingRequest;
+import com.booking.booking_system.exceptions.CustomException;
 import com.booking.booking_system.services.BookingService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -43,9 +44,22 @@ public class BookingController {
     }
 
 
+    // Get Booking by ID
+    @GetMapping("/{bookingId}")
+    public ResponseEntity<GeneralResponse<BookingResponse>> getBookingById(@PathVariable Long bookingId) {
+        try {
+            BookingResponse bookingResponse = bookingService.getBookingById(bookingId);
+            return ResponseEntity.ok(GeneralResponse.success(bookingResponse));
+        } catch (CustomException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(GeneralResponse.error(e.getMessage()));
+        }
+    }
+
+
     // Create a New Booking
     @PostMapping
-    public ResponseEntity<GeneralResponse<?>> createBooking(@Valid @RequestBody BookingRequest bookingRequest) {
+    public ResponseEntity<GeneralResponse<BookingResponse>> createBooking(@Valid @RequestBody BookingRequest bookingRequest) {
         try {
             // Delegate booking creation to the service
             BookingResponse createdBooking = bookingService.createBooking(bookingRequest);
@@ -64,12 +78,12 @@ public class BookingController {
 
     @PutMapping("/{bookingId}/confirm")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<?> confirmBooking(@PathVariable Long bookingId) {
+    public ResponseEntity<GeneralResponse<BookingResponse>> confirmBooking(@PathVariable Long bookingId) {
         try {
             BookingResponse confirmedBooking = bookingService.confirmBooking(bookingId);
-            return ResponseEntity.ok(confirmedBooking);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.ok(GeneralResponse.success(confirmedBooking));
+        } catch (CustomException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GeneralResponse.error(e.getMessage()));
         }
     }
 
@@ -87,23 +101,23 @@ public class BookingController {
 //    }
 
     @PutMapping("/{id}/cancel")
-    public ResponseEntity<String> cancelBooking(@PathVariable Long id) {
+    public ResponseEntity<GeneralResponse<String>> cancelBooking(@PathVariable Long id) {
         boolean isCancelled = bookingService.cancelBooking(id);
         if (isCancelled) {
-            return ResponseEntity.ok("Booking cancelled successfully.");
+            return ResponseEntity.ok(GeneralResponse.success("Booking cancelled successfully."));
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Booking not found or already cancelled.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GeneralResponse.error("Booking not found or already cancelled."));
         }
     }
 
     // Get User Bookings
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<BookingResponse>> getUserBookings(@PathVariable Long userId) {
+    public ResponseEntity<GeneralResponse<List<BookingResponse>>> getUserBookings(@PathVariable Long userId) {
         List<BookingResponse> bookings = bookingService.getUserBookings(userId);
         if (bookings.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GeneralResponse.error(null));
         }
-        return ResponseEntity.ok(bookings);
+        return ResponseEntity.ok(GeneralResponse.success(bookings));
     }
 
 }

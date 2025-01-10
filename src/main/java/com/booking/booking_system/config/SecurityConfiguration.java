@@ -32,10 +32,14 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/v1/auth/**").permitAll() // Allow public access for auth endpoints
                         // Public access to view schedules by service ID and date
                         .requestMatchers("/api/v1/schedules/{serviceId}/{date}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/services").authenticated() // Allow authenticated users to view services
+                        .requestMatchers(HttpMethod.GET, "/api/v1/services/{serviceId}/schedules").authenticated() // Allow authenticated users to view available time slots
                         // Restrict all other schedule operations to admins
                         .requestMatchers("/api/v1/schedules/**").hasAuthority("ADMIN")
-                        .requestMatchers("/api/v1/services").permitAll() // Anyone can view services
-                        .requestMatchers("/api/v1/services/**").hasAuthority("ADMIN") // Restrict modifications to admin
+                        // Restrict service modifications to admins
+                        .requestMatchers(HttpMethod.POST, "/api/v1/services").hasAuthority("ADMIN") // Only admins can add services
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/services").hasAuthority("ADMIN") // Only admins can edit services
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/services/**").hasAuthority("ADMIN") // Only admins can delete services
 //                        // Restrict all /api/bookings endpoints to authenticate users
                         .requestMatchers("/api/v1/bookings/**").authenticated()
                         // Only ADMIN can confirm bookings

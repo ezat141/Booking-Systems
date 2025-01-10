@@ -15,7 +15,7 @@ public class Schedule {
     private Long id;
 
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "service_id", nullable = false)
     private Service service;
 
@@ -27,5 +27,6 @@ public class Schedule {
     @CollectionTable(name = "schedule_time_slots", joinColumns = @JoinColumn(name = "schedule_id"))
     @Column(name = "time_slot")
     private List<String> timeSlots;
+
 }
 

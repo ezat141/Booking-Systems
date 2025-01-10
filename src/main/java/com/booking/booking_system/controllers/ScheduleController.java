@@ -1,7 +1,11 @@
 package com.booking.booking_system.controllers;
 
+import com.booking.booking_system.dto.ScheduleDTO;
+import com.booking.booking_system.dto.ScheduleRequest;
 import com.booking.booking_system.dto.TimeSlotRequest;
 import com.booking.booking_system.entities.Schedule;
+import com.booking.booking_system.entities.Service;
+import com.booking.booking_system.repositories.ServiceRepository;
 import com.booking.booking_system.services.ScheduleService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -18,15 +22,24 @@ public class ScheduleController {
 
     private final ScheduleService scheduleService;
 
+
     public ScheduleController(ScheduleService scheduleService) {
         this.scheduleService = scheduleService;
+
     }
+
+//    @PreAuthorize("hasAuthority('ADMIN')")
+//    @PostMapping
+//    public ResponseEntity<Schedule> createSchedule(@Valid @RequestBody Schedule schedule) {
+//        Schedule createdSchedule = scheduleService.createSchedule(schedule);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(createdSchedule);
+//    }
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping
-    public ResponseEntity<Schedule> createSchedule(@Valid @RequestBody Schedule schedule) {
-        Schedule createdSchedule = scheduleService.createSchedule(schedule);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdSchedule);
+    public ResponseEntity<ScheduleDTO> createSchedule(@Valid @RequestBody ScheduleRequest scheduleRequest) {
+        ScheduleDTO scheduleDTO = scheduleService.createSchedule(scheduleRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(scheduleDTO);
     }
 
     // Get Schedules by Service ID and Date

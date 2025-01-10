@@ -1,5 +1,6 @@
 package com.booking.booking_system.controllers;
 
+import com.booking.booking_system.dto.ServiceDTO;
 import com.booking.booking_system.entities.Service;
 import com.booking.booking_system.repositories.ServiceRepository;
 import com.booking.booking_system.services.ScheduleService;
@@ -8,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -27,27 +29,34 @@ public class ServiceController {
         this.servicesService = servicesService;
     }
 
-    // List all services
 //    @GetMapping
-//    public ResponseEntity<List<Service>> getAllServices() {
-//        List<Service> services = servicesService.getAllServices();
+//    public ResponseEntity<Page<ServiceDTO>> getAllServices(
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "10") int size) {
+//        Page<ServiceDTO> services = servicesService.getAllServices(PageRequest.of(page, size));
 //        return ResponseEntity.ok(services);
 //    }
-
     @GetMapping
-    public ResponseEntity<Page<Service>> getAllServices(
+    public ResponseEntity<Page<ServiceDTO>> getAllServices(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Page<Service> services = servicesService.getAllServices(PageRequest.of(page, size));
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) LocalDate date) {
+        Page<ServiceDTO> services = servicesService.getAllServices(PageRequest.of(page, size), date);
         return ResponseEntity.ok(services);
     }
 
     // Add a new service (Admin only)
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping
-    public ResponseEntity<Service> addService(@Valid @RequestBody Service service) {
-        Service newService = servicesService.addService(service);
-        return ResponseEntity.status(201).body(newService);
+    public ResponseEntity<ServiceDTO> addService(@Valid @RequestBody ServiceDTO serviceDTO) {
+        ServiceDTO savedServiceDTO = servicesService.addService(serviceDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedServiceDTO);
+    }
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PutMapping()
+    public ResponseEntity<ServiceDTO> updateService(@Valid @RequestBody ServiceDTO serviceDTO) {
+        ServiceDTO savedServiceDTO = servicesService.updateService(serviceDTO);
+        return ResponseEntity.ok(savedServiceDTO);
     }
 
 
@@ -59,6 +68,9 @@ public class ServiceController {
         return ResponseEntity.ok("Service deleted successfully!");
     }
 
+
+
+    // Get available time slots for a service (accessible to any authenticated user)
     @GetMapping("/{serviceId}/schedules")
     public ResponseEntity<List<String>> getAvailableTimeSlots(
             @PathVariable Long serviceId,

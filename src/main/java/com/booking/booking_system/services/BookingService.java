@@ -6,29 +6,37 @@ import com.booking.booking_system.entities.BookingStatus;
 import com.booking.booking_system.entities.Schedule;
 import com.booking.booking_system.entities.User;
 import com.booking.booking_system.dto.BookingRequest;
+import com.booking.booking_system.exceptions.CustomException;
 import com.booking.booking_system.repositories.BookingRepository;
 import com.booking.booking_system.repositories.ScheduleRepository;
 import com.booking.booking_system.repositories.UserRepository;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Validated
 @Service
 public class BookingService implements BookingServiceInt{
 
-    @Autowired
-    private BookingRepository bookingRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private ScheduleRepository scheduleRepository;
+    private final BookingRepository bookingRepository;
+    private final ModelMapper modelMapper;
+    private final UserRepository userRepository;
+    private final ScheduleRepository scheduleRepository;
 
-
+    public BookingService(BookingRepository bookingRepository, ModelMapper modelMapper, UserRepository userRepository, ScheduleRepository scheduleRepository) {
+        this.bookingRepository = bookingRepository;
+        this.modelMapper = modelMapper;
+        this.userRepository = userRepository;
+        this.scheduleRepository = scheduleRepository;
+    }
 
     // Get All Bookings
 //    public List<Booking> getAllBookings() {
@@ -40,8 +48,15 @@ public class BookingService implements BookingServiceInt{
         return bookingRepository.findAll(pageable).map(this::mapToBookingResponse);
     }
 
+    public BookingResponse getBookingById(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new CustomException("Booking not found with ID: " + bookingId));
+        return mapToBookingResponse(booking);
+    }
 
 
+
+    @Transactional
     // Create a New Booking
     public BookingResponse createBooking(BookingRequest bookingRequest) {
         // Retrieve User and Schedule
@@ -69,15 +84,17 @@ public class BookingService implements BookingServiceInt{
         // Remove the booked time slot from the schedule
         schedule.getTimeSlots().remove(bookingRequest.getTimeSlot());
         scheduleRepository.save(schedule); // Save updated schedule
-        // Map the booking to a BookingResponse
-        bookingRepository.save(booking);
-        return mapToBookingResponse(booking);
+        // Save the booking
+        Booking savedBooking= bookingRepository.save(booking);
+
+        return mapToBookingResponse(savedBooking);
 
     }
 
 
 
 
+    @Transactional
     // Cancel Booking
     public boolean cancelBooking(Long bookingId) {
         Optional<Booking> bookingOptional = bookingRepository.findById(bookingId);
@@ -100,10 +117,11 @@ public class BookingService implements BookingServiceInt{
     // Get User Bookings
     public List<BookingResponse> getUserBookings(Long userId) {
         return bookingRepository.findByUserId(userId).stream()
-                .map(this::mapToBookingResponse)
+                .map(booking -> modelMapper.map(booking, BookingResponse.class))
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public BookingResponse confirmBooking(Long bookingId) {
         Optional<Booking> bookingOptional = bookingRepository.findById(bookingId);
         if (bookingOptional.isPresent()) {
@@ -113,11 +131,11 @@ public class BookingService implements BookingServiceInt{
                 bookingRepository.save(booking);
                 return mapToBookingResponse(booking);
             } else {
-                throw new RuntimeException("Booking is already confirmed or cancelled.");
+                throw new CustomException("Booking is already confirmed or cancelled.");
             }
         }
         else {
-            throw new RuntimeException("Booking not found with ID: " + bookingId);
+            throw new CustomException("Booking not found with ID: " + bookingId);
         }
     }
     private BookingResponse mapToBookingResponse(Booking booking) {

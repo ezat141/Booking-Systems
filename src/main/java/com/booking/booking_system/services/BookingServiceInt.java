@@ -10,6 +10,7 @@ import java.util.List;
 
 public interface BookingServiceInt {
     Page<BookingResponse> getAllBookings(Pageable pageable);
+    BookingResponse getBookingById(Long bookingId);
     BookingResponse createBooking(BookingRequest bookingRequest);
     boolean cancelBooking(Long bookingId);
     List<BookingResponse> getUserBookings(Long userId);
