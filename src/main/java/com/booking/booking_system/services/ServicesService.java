@@ -34,33 +34,11 @@ public class ServicesService implements ServicesServiceInt{
 //        return serviceRepository.findAll();
 //    }
     // Fetch all services pages
-//    public Page<ServiceDTO> getAllServices(Pageable pageable) {
-//        return serviceRepository.findAll(pageable)
-//                .map(service -> {
-//                    // Fetch all schedules for the service
-//                    List<Schedule> schedules = scheduleRepository.findByServiceId(service.getId());
-//
-//                    // Aggregate timeSlots from all schedules
-//                    List<String> timeSlots = schedules.stream()
-//                            .flatMap(schedule -> schedule.getTimeSlots().stream())
-//                            .collect(Collectors.toList());
-//
-//                    // Map Service entity to ServiceDTO using ModelMapper
-//                    // ServiceDTO serviceDTO = modelMapper.map(service, ServiceDTO.class);
-//
-//                    // Set the timeSlots in the DTO
-//                    serviceDTO.setTimeSlots(timeSlots);
-//
-//                    return serviceDTO;
-//                });
-//
-//    }
-
-    public Page<ServiceDTO> getAllServices(Pageable pageable, LocalDate date) {
+    public Page<ServiceDTO> getAllServices(Pageable pageable) {
         return serviceRepository.findAll(pageable)
                 .map(service -> {
                     // Fetch all schedules for the service
-                    List<Schedule> schedules = scheduleRepository.findByServiceIdAndDate(service.getId(), date);
+                    List<Schedule> schedules = scheduleRepository.findByServiceId(service.getId());
 
                     // Aggregate timeSlots from all schedules
                     List<String> timeSlots = schedules.stream()
@@ -68,7 +46,7 @@ public class ServicesService implements ServicesServiceInt{
                             .collect(Collectors.toList());
 
                     // Map Service entity to ServiceDTO using ModelMapper
-                    ServiceDTO serviceDTO = modelMapper.map(service, ServiceDTO.class);
+                     ServiceDTO serviceDTO = modelMapper.map(service, ServiceDTO.class);
 
                     // Set the timeSlots in the DTO
                     serviceDTO.setTimeSlots(timeSlots);
@@ -77,6 +55,28 @@ public class ServicesService implements ServicesServiceInt{
                 });
 
     }
+
+//    public Page<ServiceDTO> getAllServices(Pageable pageable, LocalDate date) {
+//        return serviceRepository.findAll(pageable)
+//                .map(service -> {
+//                    // Fetch all schedules for the service
+//                    List<Schedule> schedules = scheduleRepository.findByServiceIdAndDate(service.getId(), date);
+//
+//                    // Aggregate timeSlots from all schedules
+//                    List<String> timeSlots = schedules.stream()
+//                            .flatMap(schedule -> schedule.getTimeSlots().stream())
+//                            .collect(Collectors.toList());
+//
+//                    // Map Service entity to ServiceDTO using ModelMapper
+//                    ServiceDTO serviceDTO = modelMapper.map(service, ServiceDTO.class);
+//
+//                    // Set the timeSlots in the DTO
+//                    serviceDTO.setTimeSlots(timeSlots);
+//
+//                    return serviceDTO;
+//                });
+//
+//    }
 
 
 

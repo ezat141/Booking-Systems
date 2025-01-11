@@ -28,6 +28,13 @@ public class SecurityConfiguration {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        // Allow access to Swagger endpoints
+                        .requestMatchers(
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/webjars/**"
+                        ).permitAll() // Allow access to Swagger UI and API docs
                         // Public access for authentication endpoints
                         .requestMatchers("/api/v1/auth/**").permitAll() // Allow public access for auth endpoints
                         // Public access to view schedules by service ID and date

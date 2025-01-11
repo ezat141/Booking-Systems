@@ -39,9 +39,8 @@ public class ServiceController {
     @GetMapping
     public ResponseEntity<Page<ServiceDTO>> getAllServices(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) LocalDate date) {
-        Page<ServiceDTO> services = servicesService.getAllServices(PageRequest.of(page, size), date);
+            @RequestParam(defaultValue = "10") int size) {
+        Page<ServiceDTO> services = servicesService.getAllServices(PageRequest.of(page, size));
         return ResponseEntity.ok(services);
     }
 

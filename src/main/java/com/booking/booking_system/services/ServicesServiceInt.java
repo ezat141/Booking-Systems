@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
 
 public interface ServicesServiceInt {
-    Page<ServiceDTO> getAllServices(Pageable pageable, LocalDate date);
+    Page<ServiceDTO> getAllServices(Pageable pageable);
     ServiceDTO addService(ServiceDTO service);
     void deleteService(Long id);
     ServiceDTO updateService(ServiceDTO serviceDTO);
