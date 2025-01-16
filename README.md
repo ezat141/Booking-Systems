@@ -32,5 +32,5 @@ This is a backend system for managing bookings, schedules, and services. It prov
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/your-username/booking-system.git
+   git clone https://github.com/ezat141/booking-system.git
    cd booking-system
